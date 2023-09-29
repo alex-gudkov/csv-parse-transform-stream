@@ -21,9 +21,13 @@ const transformStream = new stream.Transform({
     this.chunkRest = lines.pop();
 
     lines.forEach((line) => {
-      const values = line.split(',');
+      // split line by comma, but ignore commas inside quotes
+      const values = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
 
-      this.push(values);
+      // remove double quotes from beginning and end of each value
+      const sanitizedValues = values.map((value) => value.replace(/^"|"$/g, ''));
+
+      this.push(sanitizedValues);
     });
 
     callback();
@@ -80,8 +84,7 @@ stdout:
     '1993-10-31',
     'adore.loeb@aol.com',
     'accountant',
-    '"Taiwan',
-    ' Province of China"'
+    'Taiwan, Province of China'
   ]
 }
 {
