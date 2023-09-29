@@ -16,13 +16,12 @@ export class CsvParseTransformStream extends stream.Transform {
     this._quote = '"';
   }
 
-  /**
-   * @param {string[]} lines
-   * @returns {void}
-   */
-  _parseChunkLines(lines) {
+  _transform(chunk, encoding, callback) {
+    const lines = (this._chunkRest + chunk.toString()).split('\n');
+
+    this._chunkRest = lines.pop();
+
     for (const line of lines) {
-      // skip lines with no values
       if (!line.trim()) {
         continue;
       }
@@ -31,27 +30,24 @@ export class CsvParseTransformStream extends stream.Transform {
 
       this.push(values);
     }
-  }
-
-  _transform(chunk, encoding, callback) {
-    const lines = (this._chunkRest + chunk.toString()).split('\n');
-
-    // save last line of chunk data (in case if it not complete)
-    this._chunkRest = lines.pop();
-
-    this._parseChunkLines(lines);
 
     callback();
   }
 
   _flush(callback) {
     if (this._chunkRest) {
-      // parse the rest of chunk
       const lines = this._chunkRest.split('\n');
 
-      this._parseChunkLines(lines);
+      for (const line of lines) {
+        if (!line.trim()) {
+          continue;
+        }
 
-      // flush the rest of chunk
+        const values = csvSplitLine(line, this._separator, this._quote);
+
+        this.push(values);
+      }
+
       this._chunkRest = '';
     }
 
