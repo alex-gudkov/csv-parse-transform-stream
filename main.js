@@ -1,64 +1,68 @@
 import fs from 'node:fs';
 import stream from 'node:stream';
 
-const readStream = fs.createReadStream('./5-users.csv', { encoding: 'utf-8' });
-
 function csvSplitLine(line, separator, quote) {
   const values = [];
 
-  let current = '';
-  let insideQuotes = false;
+  let value = '';
+  let isInsideQuotes = false;
 
   for (const char of line) {
-    if (char === separator && !insideQuotes) {
-      values.push(current);
+    if (char === separator && !isInsideQuotes) {
+      values.push(value);
 
-      current = '';
+      value = '';
     } else if (char === quote) {
-      insideQuotes = !insideQuotes;
+      isInsideQuotes = !isInsideQuotes;
     } else {
-      current += char;
+      value += char;
     }
   }
 
-  values.push(current);
+  values.push(value);
 
   return values;
 }
 
-const csvParseTransformStream = new stream.Transform({
-  readableObjectMode: true,
+function createCsvParseTransformStream() {
+  return new stream.Transform({
+    readableObjectMode: true,
 
-  construct(callback) {
-    this.chunkRest = '';
-    this.separator = ',';
-    this.quote = '"';
+    construct(callback) {
+      this.chunkRest = '';
+      this.separator = ',';
+      this.quote = '"';
 
-    callback();
-  },
+      callback();
+    },
 
-  transform(chunk, encoding, callback) {
-    const lines = (this.chunkRest + chunk.toString()).split('\n');
+    transform(chunk, encoding, callback) {
+      const lines = (this.chunkRest + chunk.toString()).split('\n');
 
-    this.chunkRest = lines.pop();
+      this.chunkRest = lines.pop();
 
-    for (const line of lines) {
-      const values = csvSplitLine(line, this.separator, this.quote);
+      for (const line of lines) {
+        const values = csvSplitLine(line, this.separator, this.quote);
 
-      this.push(values);
-    }
+        this.push(values);
+      }
 
-    callback();
-  },
+      callback();
+    },
 
-  flush(callback) {
-    if (this.chunkRest) {
-      this.push(this.chunkRest);
-    }
+    flush(callback) {
+      if (this.chunkRest) {
+        this.push(this.chunkRest);
+      }
 
-    callback();
-  },
-});
+      callback();
+    },
+  });
+}
+
+const readStream = fs.createReadStream('./5-users.csv', { encoding: 'utf-8' });
+
+const csvParseTransformStream = createCsvParseTransformStream();
 
 readStream.pipe(csvParseTransformStream);
 
