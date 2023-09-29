@@ -3,6 +3,30 @@ import stream from 'node:stream';
 
 const readStream = fs.createReadStream('./5-users.csv', { encoding: 'utf-8' });
 
+function split(line) {
+  const values = [];
+
+  let current = '';
+  let insideQuotes = false;
+
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+
+    if (char === ',' && !insideQuotes) {
+      values.push(current);
+      current = '';
+    } else if (char === '"') {
+      insideQuotes = !insideQuotes;
+    } else {
+      current += char;
+    }
+  }
+
+  values.push(current);
+
+  return values;
+}
+
 const transformStream = new stream.Transform({
   // indicate that output of this stream will be object (arrays of values) rather than plain string/binary data
   readableObjectMode: true,
@@ -21,13 +45,9 @@ const transformStream = new stream.Transform({
     this.chunkRest = lines.pop();
 
     lines.forEach((line) => {
-      // split line by comma, but ignore commas inside quotes
-      const values = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+      const values = split(line);
 
-      // remove double quotes from beginning and end of each value
-      const sanitizedValues = values.map((value) => value.replace(/^"|"$/g, ''));
-
-      this.push(sanitizedValues);
+      this.push(values);
     });
 
     callback();
