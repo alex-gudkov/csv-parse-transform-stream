@@ -1,5 +1,5 @@
 import fs from 'node:fs';
-import * as toUpperCase from './create-to-upper-case-transform-stream.js';
+import * as toUpperCase from './to-upper-case.js';
 
 const readStream = fs.createReadStream('./5-users.csv', { encoding: 'utf-8' });
 
