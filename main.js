@@ -69,6 +69,14 @@ stdout:
   ]
 }
 {
-  chunk: 'eee1f727-1e80-47c5-8126-f47376f00616,Jacenta,Raul,1990-11-09,jacenta.raul@elude.in,designer,Botswana'
+  chunk: [
+    'eee1f727-1e80-47c5-8126-f47376f00616',
+    'Jacenta',
+    'Raul',
+    '1990-11-09',
+    'jacenta.raul@elude.in',
+    'designer',
+    'Botswana'
+  ]
 }
 */
