@@ -1,21 +1,28 @@
 import stream from 'node:stream';
 
-export function createToUpperCaseTransformStream() {
-  return new stream.Transform({
-    encoding: 'utf-8',
+class ToUpperCaseTransformStream extends stream.Transform {
+  constructor(options) {
+    super(options);
+  }
 
-    transform(chunk, encoding, callback) {
-      const upperCaseChunk = chunk.toString().toUpperCase();
+  _transform(chunk, encoding, callback) {
+    const upperCaseChunk = chunk.toString().toUpperCase();
 
-      this.push(upperCaseChunk);
+    this.push(upperCaseChunk);
 
-      callback();
-    },
+    callback();
+  }
 
-    flush(callback) {
-      this.push(null);
+  // this method is optional but it's a good practice to implement it
+  _flush(callback) {
+    this.push(null);
 
-      callback();
-    },
-  });
+    callback();
+  }
 }
+
+function createTransformStream(options) {
+  return new ToUpperCaseTransformStream(options);
+}
+
+export { ToUpperCaseTransformStream, createTransformStream };
