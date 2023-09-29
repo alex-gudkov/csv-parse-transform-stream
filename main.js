@@ -3,19 +3,18 @@ import stream from 'node:stream';
 
 const readStream = fs.createReadStream('./5-users.csv', { encoding: 'utf-8' });
 
-function split(line) {
+function csvSplitLine(line, separator, quote) {
   const values = [];
 
   let current = '';
   let insideQuotes = false;
 
-  for (let i = 0; i < line.length; i++) {
-    const char = line[i];
-
-    if (char === ',' && !insideQuotes) {
+  for (const char of line) {
+    if (char === separator && !insideQuotes) {
       values.push(current);
+
       current = '';
-    } else if (char === '"') {
+    } else if (char === quote) {
       insideQuotes = !insideQuotes;
     } else {
       current += char;
@@ -27,48 +26,43 @@ function split(line) {
   return values;
 }
 
-const transformStream = new stream.Transform({
-  // indicate that output of this stream will be object (arrays of values) rather than plain string/binary data
+const csvParseTransformStream = new stream.Transform({
   readableObjectMode: true,
 
   construct(callback) {
     this.chunkRest = '';
+    this.separator = ',';
+    this.quote = '"';
 
-    // call callback to indicate that stream is ready to receive data
     callback();
   },
 
   transform(chunk, encoding, callback) {
     const lines = (this.chunkRest + chunk.toString()).split('\n');
 
-    // save last line of chunk data (in case if it not complete)
     this.chunkRest = lines.pop();
 
-    lines.forEach((line) => {
-      const values = split(line);
+    for (const line of lines) {
+      const values = csvSplitLine(line, this.separator, this.quote);
 
       this.push(values);
-    });
+    }
 
     callback();
   },
 
   flush(callback) {
-    // push rest of chunk data
     if (this.chunkRest) {
       this.push(this.chunkRest);
     }
-
-    // indicate that stream is done
-    this.push(null);
 
     callback();
   },
 });
 
-readStream.pipe(transformStream);
+readStream.pipe(csvParseTransformStream);
 
-transformStream.on('data', (chunk) => {
+csvParseTransformStream.on('data', (chunk) => {
   console.log({ chunk });
 });
 
