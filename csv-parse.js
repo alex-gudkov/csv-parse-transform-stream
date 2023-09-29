@@ -29,46 +29,47 @@ function csvSplitLine(line, separator, quote) {
   return values;
 }
 
+class CsvParseTransformStream extends stream.Transform {
+  _chunkRest = '';
+  _separator = ',';
+  _quote = '"';
+
+  constructor() {
+    super({
+      readableObjectMode: true,
+    });
+  }
+
+  _transform(chunk, encoding, callback) {
+    const lines = (this._chunkRest + chunk.toString()).split('\n');
+
+    this._chunkRest = lines.pop();
+
+    for (const line of lines) {
+      const values = csvSplitLine(line, this._separator, this._quote);
+
+      this.push(values);
+    }
+
+    callback();
+  }
+
+  _flush(callback) {
+    if (this._chunkRest) {
+      this.push(this._chunkRest);
+
+      this._chunkRest = '';
+    }
+
+    callback();
+  }
+}
+
 /**
- * @param {stream.TransformOptions} options
- * @returns {stream.Transform}
+ * @returns {CsvParseTransformStream}
  */
-function createTransformStream(options) {
-  return new stream.Transform({
-    ...options,
-
-    readableObjectMode: true,
-
-    construct(callback) {
-      this.chunkRest = '';
-      this.separator = ',';
-      this.quote = '"';
-
-      callback();
-    },
-
-    transform(chunk, encoding, callback) {
-      const lines = (this.chunkRest + chunk.toString()).split('\n');
-
-      this.chunkRest = lines.pop();
-
-      for (const line of lines) {
-        const values = csvSplitLine(line, this.separator, this.quote);
-
-        this.push(values);
-      }
-
-      callback();
-    },
-
-    flush(callback) {
-      if (this.chunkRest) {
-        this.push(this.chunkRest);
-      }
-
-      callback();
-    },
-  });
+function createTransformStream() {
+  return new CsvParseTransformStream();
 }
 
 const csvParse = {
