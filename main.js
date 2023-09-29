@@ -1,6 +1,12 @@
 import fs from 'node:fs';
 import stream from 'node:stream';
 
+/**
+ * @param {string} line
+ * @param {string} separator
+ * @param {string} quote
+ * @returns {string[]}
+ */
 function csvSplitLine(line, separator, quote) {
   const values = [];
 
@@ -24,8 +30,14 @@ function csvSplitLine(line, separator, quote) {
   return values;
 }
 
-function createCsvParseTransformStream() {
+/**
+ * @param {stream.TransformOptions} options
+ * @returns {stream.Transform}
+ */
+function createCsvParseTransformStream(options) {
   return new stream.Transform({
+    ...options,
+
     readableObjectMode: true,
 
     construct(callback) {
