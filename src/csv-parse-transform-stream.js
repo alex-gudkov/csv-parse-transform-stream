@@ -3,17 +3,11 @@ import { csvSplitLine } from './csv-split-line.js';
 
 export class CsvParseTransformStream extends stream.Transform {
   _chunkRest;
-  _separator;
-  _quote;
 
-  constructor() {
-    super({
-      readableObjectMode: true,
-    });
+  constructor(options) {
+    super(options);
 
     this._chunkRest = '';
-    this._separator = ',';
-    this._quote = '"';
   }
 
   _transform(chunk, encoding, callback) {
@@ -26,7 +20,7 @@ export class CsvParseTransformStream extends stream.Transform {
         continue;
       }
 
-      const values = csvSplitLine(line, this._separator, this._quote);
+      const values = csvSplitLine(line, ',', '"');
 
       this.push(values);
     }
@@ -43,7 +37,7 @@ export class CsvParseTransformStream extends stream.Transform {
           continue;
         }
 
-        const values = csvSplitLine(line, this._separator, this._quote);
+        const values = csvSplitLine(line, ',', '"');
 
         this.push(values);
       }
