@@ -1,6 +1,6 @@
 import stream from 'node:stream';
 
-class ToUpperCaseTransformStream extends stream.Transform {
+export class ToUpperCaseTransformStream extends stream.Transform {
   constructor(options) {
     super(options);
   }
@@ -12,17 +12,13 @@ class ToUpperCaseTransformStream extends stream.Transform {
 
     callback();
   }
-
-  // this method is optional but it's a good practice to implement it
-  _flush(callback) {
-    this.push(null);
-
-    callback();
-  }
 }
 
-function createTransformStream(options) {
+/**
+ * Creates an instance of ToUpperCaseTransformStream.
+ * @param {stream.TransformOptions} options
+ * @returns {ToUpperCaseTransformStream}
+ */
+export function createTransformStream(options) {
   return new ToUpperCaseTransformStream(options);
 }
-
-export { ToUpperCaseTransformStream, createTransformStream };
